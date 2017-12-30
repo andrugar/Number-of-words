@@ -36,6 +36,7 @@ def test_delete_zeros():
     correct_out_list = [2, 4, 2, 6, 1]
     assert out_list == correct_out_list
 
+
 def test_delete_zeros_p_mode():
     in_list = [[2, 0, 4, 2], [0, 0, 6, 1]]
     out_list = number_of_words.delete_zeros(in_list, 'p')
