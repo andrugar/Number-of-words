@@ -5,8 +5,9 @@ import re
 def name_of_file():
     """Read the name of the file
     
-       Read the input name of the file. But also can take
-       the name as first command line argument"""
+    Read the input name of the file. But also can take the name as first 
+    command line argument.
+    """
     def name_check(file):
         if os.path.isfile(file):
             return file
@@ -31,15 +32,18 @@ def file_by_strings(file):
         return [string.strip() for string in ff]
 
 def list_of_strings_by_sentences(list_of_strings):
-    """Divide strings by sentences.
-       Return [[Sentence, Sentence, ..], [Sentence, ..], ..]"""
+    """Divide strings by sentences
+    
+    Return [[Sentence, Sentence, ..], [Sentence, ..], ..]
+    """
     return [re.split(r'[.!?...]\s', string) for string in list_of_strings]
 
 def choose_mode():
     """Allows to choose between the two modes
     
-       Read the input command to select the mode. But also can take
-       the command as second command line argument"""
+    Read the input command to select the mode. But also can take the command 
+    as second command line argument.
+    """
     def command_check(decision):
         if decision in ('t', 'p'):
             return decision
@@ -73,12 +77,11 @@ def list_of_sentences(list_of_lists_of_sentences):
 def count_words(list, mode='t'):
     """Counts the number of words in every element of the list.
        
-       Have 2 modes:
-       1) 't'-mode works with list of sentences. Return a list of 
-       numbers.
-       2) 'p'-mode works with list of lists of sentences. Return a list of
-       lists of numbers."""
-       
+    Have 2 modes:
+    1) 't'-mode works with list of sentences. Return a list of numbers.
+    2) 'p'-mode works with list of lists of sentences. Return a list of lists 
+    of numbers.
+    """  
     if mode == 't':
         return [len(re.findall('\w+', string)) for string in list]
     elif mode == 'p':
@@ -88,9 +91,10 @@ def count_words(list, mode='t'):
 def delete_zeros(list, mode='t'):
     """Delete zero elements from sequense
     
-       Have 2 modes:
-       1) 't'-mode works with list of numbers.
-       2) 'p'-mode works with list of lists of numbers."""
+    Have 2 modes:
+    1) 't'-mode works with list of numbers.
+    2) 'p'-mode works with list of lists of numbers.
+    """
     if mode == 't':
         return [i for i in list if i]
     elif mode == 'p':
@@ -102,12 +106,12 @@ def write_number_of_words(list, mode='t',
                           name_of_out_file='Number_of_words.txt'):
     """Create the out_file and write there the answer
     
-       Have 2 modes:
-       1) 't'-mode write numbers of sentences counted throughout the entire
-       text. In-list should be the list of numbers.
-       2) 'p'-mode write numbers of sentences for each paragraph separately.
-       In-list should be the list of lists of numbers."""
-    
+    Have 2 modes:
+    1) 't'-mode write numbers of sentences counted throughout the entire
+    text. In-list should be the list of numbers.
+    2) 'p'-mode write numbers of sentences for each paragraph separately.
+    In-list should be the list of lists of numbers.
+    """
     def writing(list_of_numbers, out_file, beginning):
         for sentence_count, number in enumerate(list_of_numbers):
             out_file.write(
@@ -134,9 +138,16 @@ def write_number_of_words(list, mode='t',
 def number_of_words():
     """Return a number of words in every sentence in file
     
-       Can count sentences throughout the entire text or for each paragraph
-       separately."""
-    
+    Can count sentences throughout the entire text or for each paragraph
+    separately.
+    You can interact with the program by answering it's questions or by using
+    command line arguments. You can give the name of the file you want to
+    process as first command line argument. And as the second command line 
+    argument you can give the letter 't' or 'p' which will determine the mode 
+    of program.
+    't'-mode write numbers of sentences counted throughout the entire text.
+    'p'-mode write numbers of sentences for each paragraph separately.
+    """
     file = name_of_file()
     strings_in_file = file_by_strings(file)
     strings_by_sentences = list_of_strings_by_sentences(strings_in_file)
