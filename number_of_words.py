@@ -8,35 +8,23 @@ def name_of_file():
     Read the input name of the file. But also can take the name as first 
     command line argument.
     """
-    def name_check(file):
-        if os.path.isfile(file):
-            return file
+    def name_check(my_file):
+        if os.path.isfile(my_file):
+            return my_file
         else:
             print('Error: No such file. Try to check the spelling.')
             return read_name()
     
     def read_name():
-        file = str(input('Please enter the name of the file: '))
-        return name_check(file)
+        my_file = str(input('Please enter the name of the file: '))
+        return name_check(my_file)
     
     sys.argv.pop(0)
     if len(sys.argv) > 0:
-        file = str(sys.argv.pop(0))
-        return name_check(file)
+        my_file = str(sys.argv.pop(0))
+        return name_check(my_file)
     else:
         return read_name()
-
-def file_by_strings(file):
-    """Read the file by strings without empty strings"""
-    with open(file) as ff:
-        return [string.strip() for string in ff]
-
-def list_of_strings_by_sentences(list_of_strings):
-    """Divide strings by sentences
-    
-    Return [[Sentence, Sentence, ..], [Sentence, ..], ..]
-    """
-    return [re.split(r'[.!?...]\s', string) for string in list_of_strings]
 
 def choose_mode():
     """Allows to choose between the two modes
@@ -66,73 +54,108 @@ def choose_mode():
           '-for each paragraph separately(p)?')
         return read_command()
 
-def list_of_sentences(list_of_lists_of_sentences):
-    """Integrate the list of lists into list"""
-    out_list = []
-    for list in list_of_lists_of_sentences:
-        for sentence in list:
-            out_list.append(sentence)
-    return out_list
+def read_file_by_strings(my_file):
+    with open(my_file) as ff:
+        for string_from_file in ff:
+            yield string_from_file.strip()
 
-def count_words(list, mode='t'):
-    """Counts the number of words in every element of the list.
+def divide_string_by_sentences(string_generator):
+    """
+    Generator. Return list of sentences from string.
+    """
+    re_pattern = re.compile(r'[.!?...]\s')
+    for unsplitted_string in string_generator:
+        yield re_pattern.split(unsplitted_string)
+
+def one_by_one(list_of_sentences_generator, mode='t'):
+    """Generator. Return sentence one by one"""
+    if mode == 't':
+        for list_of_sentences in list_of_sentences_generator:
+            for sentence in list_of_sentences:
+                yield sentence
+    elif mode == 'p':
+        string_number = 0
+        for list_of_sentences in list_of_sentences_generator:
+            string_number += 1
+            for sentence in list_of_sentences:
+                yield (string_number, sentence)
+
+def count_words(sentences_generator, mode='t'):
+    """Generator. Counts the number of words in senetence.
        
     Have 2 modes:
-    1) 't'-mode works with list of sentences. Return a list of numbers.
-    2) 'p'-mode works with list of lists of sentences. Return a list of lists 
-    of numbers.
+    1) 't'-mode works with string. It returns the number of words in string.
+    2) 'p'-mode works with tuples of the form (number, string). It
+    returns tuples of the form (number, number of words in string).
     """  
+    re_pattern = re.compile('\w+')
     if mode == 't':
-        return [len(re.findall('\w+', string)) for string in list]
+        for sentence in sentences_generator:
+            yield len(re_pattern.findall(sentence))
     elif mode == 'p':
-        list_of_lists = list
-        return [count_words(list) for list in list_of_lists]
+        for string_number, sentence in sentences_generator:
+            yield (string_number, len(re_pattern.findall(sentence)))
 
-def delete_zeros(list, mode='t'):
-    """Delete zero elements from sequense
+def delete_zeros(numbers_generator, mode='t'):
+    """Generator. Delete zero elements from sequense.
     
     Have 2 modes:
-    1) 't'-mode works with list of numbers.
-    2) 'p'-mode works with list of lists of numbers.
+    1) 't'-mode works with numbers.
+    2) 'p'-mode works with tuples of the form (number, number).
     """
     if mode == 't':
-        return [i for i in list if i]
+        for number in numbers_generator:
+            if number:
+                yield number
     elif mode == 'p':
-        list_of_lists = list
-        new_list_of_lists = [delete_zeros(list) for list in list_of_lists]
-        return delete_zeros(new_list_of_lists)
+        paragraph = 1
+        string_count = 1
+        for string_number, number in numbers_generator:
+            if number:
+                if string_count != string_number:
+                    paragraph += 1
+                    string_count = string_number
+                yield (paragraph, number)
 
-def write_number_of_words(list, mode='t',
+def write_number_of_words(in_generator, mode='t',
                           name_of_out_file='Number_of_words.txt'):
     """Create the out_file and write there the answer
     
     Have 2 modes:
     1) 't'-mode write numbers of sentences counted throughout the entire
-    text. In-list should be the list of numbers.
+    text. In-generator should yield numbers.
     2) 'p'-mode write numbers of sentences for each paragraph separately.
-    In-list should be the list of lists of numbers.
+    In-generator should yield tuples of the form (number, number).
     """
-    def writing(list_of_numbers, out_file, beginning):
-        for sentence_count, number in enumerate(list_of_numbers):
-            out_file.write(
-                '{beginning} {words_count} words in the {sentence_number} '
-                'sentence;\n'.format(
-                    beginning=beginning,
-                    words_count=number, 
-                    sentence_number=sentence_count+1
-                    )
-                )
-    
     with open(name_of_out_file, 'w') as out_file:
         if mode == 't':
-            writing(list, out_file, beginning='There are')
-        elif mode == 'p':
-            for paragraph_count, list_of_numbers in enumerate(list):
+            for sentence_count, number in enumerate(in_generator):
                 out_file.write(
-                    'In the {paragraph_number} paragraph there are:\n'.format(
-                        paragraph_number=paragraph_count+1)
+                    'There are {number_of_words} words in the {sentence_number} '
+                    'sentence;\n'.format(
+                        number_of_words=number, 
+                        sentence_number=sentence_count+1
                         )
-                writing(list_of_numbers, out_file, beginning='~')
+                    )
+        elif mode == 'p':
+            paragraph = 0
+            sentence_count = 0
+            for paragraph_number, number in in_generator:
+                if paragraph != paragraph_number:
+                    paragraph = paragraph_number
+                    sentence_count = 0
+                    out_file.write(
+                        'In the {} paragraph there are:'
+                        '\n'.format(paragraph_number)
+                        )
+                sentence_count += 1
+                out_file.write(
+                    '~ {number_of_words} words in the {sentence_number} '
+                    'sentence;\n'.format(
+                        number_of_words=number, 
+                        sentence_number=sentence_count
+                        )
+                    )
     print('Done. Look at the file "{}".'.format(name_of_out_file))
 
 def number_of_words():
@@ -148,16 +171,16 @@ def number_of_words():
     't'-mode write numbers of sentences counted throughout the entire text.
     'p'-mode write numbers of sentences for each paragraph separately.
     """
-    file = name_of_file()
-    strings_in_file = file_by_strings(file)
-    strings_by_sentences = list_of_strings_by_sentences(strings_in_file)
+    my_file = name_of_file()
     mode = choose_mode()
-    if mode == 't':
-        strings_by_sentences = list_of_sentences(strings_by_sentences)
-    words_count = count_words(strings_by_sentences, mode)
-    words_count = delete_zeros(words_count, mode)
-    write_number_of_words(words_count, mode)
+    strings_in_file = read_file_by_strings(my_file)
+    strings_by_sentences = divide_string_by_sentences(strings_in_file)    
+    sentences = one_by_one(strings_by_sentences, mode)
+    words_count = count_words(sentences, mode)
+    words_count_without_z = delete_zeros(words_count, mode)
+    write_number_of_words(words_count_without_z, mode)
 
 if __name__ == '__main__':
     
     number_of_words()
+    
